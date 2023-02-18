@@ -1,4 +1,4 @@
-export ISD_QUICK=1
+#export ISD_QUICK=1
 
 STATION_IDS=`python3 ./station_ids.py config/stations_in.csv`
 
