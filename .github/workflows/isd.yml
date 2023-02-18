@@ -19,3 +19,4 @@ jobs:
             run: sudo apt-get install -y lftp
           - name: mirror ftp
             run: ./isd.sh
+          - uses: stefanzweifel/git-auto-commit-action@v4
