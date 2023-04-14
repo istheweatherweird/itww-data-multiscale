@@ -1,9 +1,8 @@
 name: isd-test
 
 on:
-  push:
   schedule:
-    - cron: '31 14 * * *'
+    - cron: '36 14 * * *'
 
 jobs:
     build: 
