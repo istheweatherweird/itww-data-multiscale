@@ -1,11 +1,10 @@
 name: isd-test
 
 on:
-  push: 
   workflow_dispatch: 
   schedule:
     - cron: '16 15 * * *'
-    - cron: '16,31,46 0-14,16-23 * * *'
+    - cron: '16 0-14,16-23 * * *'
 
 jobs:
     build: 
