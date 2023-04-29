@@ -6,5 +6,5 @@ STATION_IDS=`python3 ./station_ids.py config/stations_in.csv`
 for STATION_ID in $STATION_IDS
 do
     mkdir -p csv/isd/$STATION_ID
-    python3 isd_summary.py www csv/isd $STATION_ID
+    python3 isd.py www csv/isd $STATION_ID
 done
