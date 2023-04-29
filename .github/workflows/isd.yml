@@ -1,9 +1,11 @@
 name: isd-test
 
 on:
+  push: 
   workflow_dispatch: 
   schedule:
-    - cron: '15 15 * * *'
+    - cron: '16 15 * * *'
+    - cron: '16,31,46 0-14,16-23 * * *'
 
 jobs:
     build: 
@@ -18,8 +20,13 @@ jobs:
             run: |
                 python -m pip install --upgrade pip
                 pip install -r requirements.txt
+          - name: build stations.csv
+            run: python stations_out.py config/stations_in.csv csv/airports.dat > csv/stations.csv
           - name: Install lftp
             run: sudo apt-get install -y lftp
-          - name: mirror ftp
+          - name: Build isd database
+            if: github.event.schedule != '16,31,46 0-14,16-23 * * *'
             run: ./isd.sh
+          - name: Update latest
+            run: ./latest.sh
           - uses: stefanzweifel/git-auto-commit-action@v4
