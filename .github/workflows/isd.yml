@@ -24,7 +24,7 @@ jobs:
           - name: Install lftp
             run: sudo apt-get install -y lftp
           - name: Build isd database
-            if: github.event.schedule != '16,31,46 0-14,16-23 * * *'
+            if: github.event.schedule != '16 0-14,16-23 * * *'
             run: ./isd.sh
           - name: Update latest
             run: ./latest.sh
