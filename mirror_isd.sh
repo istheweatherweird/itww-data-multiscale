@@ -12,7 +12,7 @@ else
     if [[ "$ISD_QUICK" == 1 ]]; then
         echo "Quick!"
         # for quick build only use the first station and 2020s
-        REGEX="^[0-9]+/$2"
+        REGEX="^[0-9]+/("`python -c "import sys; print(str.join('|', sys.argv[2:]))" $@`")"
         EXCLUDE="^([^2]|2[^0]|20[^2])"
     else
         REGEX="^[0-9]+/("`python -c "import sys; print(str.join('|', sys.argv[2:]))" $@`")"

@@ -1,7 +1,7 @@
 # get the latest weather (and summaries)
 # combines a quick mirror of ISD (last 2 years) with latest observations from the NOAA API
 
-STATION_IDS=`ISD_LATEST=1 python3 ./station_ids.py config/stations_in.csv`
+STATION_IDS=`python3 ./station_ids.py config/stations_in.csv --primary`
 
 echo $STATION_IDS
 
