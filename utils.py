@@ -22,11 +22,9 @@ def read_isd_helper(basedir, station_id):
 
 def read_isd(basedir, station_id, station_id2=None):
     df = read_isd_helper(basedir, station_id)
-    print(df)
 
     if station_id2 is not None:
         df2 = read_isd_helper(basedir, station_id2)
-        print(df2)
         df = pd.concat((df, df2))
 
     df = df.groupby('timestamp').first()
