@@ -4,7 +4,7 @@ import pathlib
 import gzip
 import requests
 
-def read_isd(basedir, station_id):
+def read_isd_helper(basedir, station_id):
     colspecs = [(15,27), (27,28), (87,92), (92,93)]
     colnames = ['timestamp', 'source', 'temp', 'temp_quality']
 
@@ -17,6 +17,18 @@ def read_isd(basedir, station_id):
     df['timestamp'] = pd.to_datetime(df.timestamp, format="%Y%m%d%H%M", utc=True)
     df = df[df.temp != '+9999']
     df['temp'] = df.temp.astype(int)/10
+
+    return df
+
+def read_isd(basedir, station_id, station_id2=None):
+    df = read_isd_helper(basedir, station_id)
+    print(df)
+
+    if station_id2 is not None:
+        df2 = read_isd_helper(basedir, station_id2)
+        print(df2)
+        df = pd.concat((df, df2))
+
     df = df.groupby('timestamp').first()
     
     return(df)
@@ -54,8 +66,9 @@ def write_isd_summary(summary, outdir):
     for group_name, df_group in summary_grouped:
         df_group.to_csv(outdir + "/" + group_name + ".csv", index=False)
 
-def get_ICAO(station_id, stations):
-    ICAO = stations[(stations.USAF.astype(str) + "-" + stations.WBAN.astype(str)) == station_id].ICAO.iloc[0]
+def get_ICAO(station_id):
+    stations = get_stations()
+    ICAO = stations[(stations.USAF + "-" + stations.WBAN) == station_id].ICAO.iloc[0]
     return(ICAO)
 
 def get_latest(ICAO, start_time, end_time=None):
@@ -111,3 +124,13 @@ def get_latest_summary(df):
 
     return latest
 
+def get_old_station_id(station_id):
+    stations = get_stations()
+    row = stations[(stations.USAF.astype(str) + "-" + stations.WBAN.astype(str)) == station_id].iloc[0]
+    if pd.isnull(row.USAF2):
+        return None
+    else:
+        return row.USAF2 + "-" + row.WBAN2
+
+def get_stations():
+    return pd.read_csv("csv/stations.csv", dtype=str)
