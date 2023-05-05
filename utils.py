@@ -9,14 +9,18 @@ def read_isd_helper(basedir, station_id):
     colnames = ['timestamp', 'source', 'temp', 'temp_quality']
 
     path = pathlib.Path(basedir)
+    gz_files = list(path.glob("*/" + station_id + "*"))
 
-    df = pd.concat([pd.read_fwf(gzip.open(gz_file, 'rt', errors='ignore'),
+    if len(gz_files) > 0:
+        df = pd.concat([pd.read_fwf(gzip.open(gz_file, 'rt', errors='ignore'),
                  colspecs=colspecs, names=colnames, dtype=str)
-                 for gz_file in path.glob("*/" + station_id + "*")])
+                 for gz_file in gz_files])
 
-    df['timestamp'] = pd.to_datetime(df.timestamp, format="%Y%m%d%H%M", utc=True)
-    df = df[df.temp != '+9999']
-    df['temp'] = df.temp.astype(int)/10
+        df['timestamp'] = pd.to_datetime(df.timestamp, format="%Y%m%d%H%M", utc=True)
+        df = df[df.temp != '+9999']
+        df['temp'] = df.temp.astype(int)/10
+    else:
+        df = pd.DataFrame()
 
     return df
 
