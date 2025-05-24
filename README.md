@@ -5,7 +5,6 @@ This repository builds (and hosts) two sets of CSV files, in the `csv` subdirect
  - `isd`: historic temperature records. Contains a subdirectory for each weather station. That subdirectory contains a file for each day of the year, e.g. 0101.csv for January 1st.
  - `latest`: latest temperature records. Contains one file for each weather station.
 
-Each dataset is structured with a subdirectory for each station. The isd data has a file for each hour of each day. 
 The website www.istheweatherweird.com compares `latest` to `isd` to assess how weird the weather is right now.
 
 The process to build these datasets using GitHub actions is as follows:
