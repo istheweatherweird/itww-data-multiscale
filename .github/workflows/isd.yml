@@ -28,4 +28,4 @@ jobs:
             run: ./isd.sh
           - name: Update latest
             run: ./latest.sh
-          - uses: stefanzweifel/git-auto-commit-action@v4
+          - uses: stefanzweifel/git-auto-commit-action@v5
