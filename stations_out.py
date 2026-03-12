@@ -3,10 +3,10 @@ import pandas as pd
 import sys
 
 stations_in = pd.read_csv(sys.argv[1], dtype='str')
-isd_history = pd.read_csv("ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv", dtype='str')
+ghcnh_stations = pd.read_csv("https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.csv", dtype='str')
 airports = pd.read_csv(sys.argv[2], dtype='str', header=None)
 
-stations = stations_in.merge(isd_history, on=['USAF','WBAN'])
+stations = stations_in.merge(ghcnh_stations, on=['ICAO'])
 
 airports.rename(columns={5:'ICAO', 11:'TZ'}, inplace=True)
 stations = stations.merge(airports[['ICAO', 'TZ']],
