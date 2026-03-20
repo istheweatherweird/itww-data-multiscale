@@ -27,13 +27,13 @@ def read_ghcnh_parquet(basedir, GHCN_ID):
         for parquet_file in parquet_files:
             try:
                 dfs.append(pd.read_parquet(parquet_file, columns=columns))
-                dfs.append(pd.DataFrame(columns=columns))
             except Exception as e:
                 raise ValueError(f"Error: failed to parse {parquet_file}: {e}")
         df = pd.concat(dfs, ignore_index=True)
 
         df['timestamp'] = pd.to_datetime(df.DATE, utc=True)
         df['temp'] = df['temperature'].astype(float)
+        df = df[df.temp.notna()]
 
         return df[['timestamp', 'temp']].groupby('timestamp').first()
     else:
@@ -51,7 +51,7 @@ def get_ghcnh_summary(df):
         m.loc[r.count() <= days*24*prop] = np.nan
         return(m)
 
-    rollings = {"D" + str(days): get_rolling_mean(df2.loc[hours], days, 0.99) 
+    rollings = {"D" + str(days): get_rolling_mean(df2.loc[hours], days, 0.95)
                 for days in [1, 7, 30, 365]}
 
     summary = pd.DataFrame(rollings)

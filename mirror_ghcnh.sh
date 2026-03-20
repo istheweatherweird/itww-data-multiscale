@@ -15,7 +15,7 @@ aria2c --conditional-get --continue --dir="$1" "${BASEURL}/doc/ghcnh-inventory.t
 # if ITWW_LATEST is set, only download the latest 2 years of data for each station
 if [[ "$ITWW_LATEST" == 1 ]]; then
    for station in "${@:2}"; do    
-      grep "^$station" $1/ghcnh-inventory.txt | tail -2
+      grep "^$station" $1/ghcnh-inventory.txt | tail -3
    done |\
       awk -v BASEURL="$BASEURL" '{print BASEURL "/access/by-year/" $2 "/parquet/GHCNh_" $1 "_" $2 ".parquet"}' |\
       aria2c --conditional-get --continue --dir=$1 --input-file=-
