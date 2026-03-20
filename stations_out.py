@@ -12,5 +12,5 @@ airports.rename(columns={5:'ICAO', 11:'TZ'}, inplace=True)
 stations = stations.merge(airports[['ICAO', 'TZ']],
                how='left', on='ICAO')
 
-stations.head(2).to_csv(sys.stdout, index=False)
+stations.to_csv(sys.stdout, index=False)
 
