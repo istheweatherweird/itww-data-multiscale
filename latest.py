@@ -6,13 +6,13 @@ WWW_DIR = sys.argv[1]
 OUT_DIR = sys.argv[2]
 station_id = sys.argv[3]
 
-df_isd = utils.read_isd(WWW_DIR, station_id)
+df_ghcnh = utils.read_ghcnh_parquet(WWW_DIR, station_id)
 
 ICAO = utils.get_ICAO(station_id)
-last_isd_timestamp = df_isd.sort_index().index[-1]
-df_latest = utils.get_latest(ICAO, last_isd_timestamp - pd.Timedelta(1, "H"))
+last_ghcnh_timestamp = df_ghcnh.sort_index().index[-1]
+df_latest = utils.get_latest(ICAO, last_ghcnh_timestamp - pd.Timedelta(1, "h"))
 
-df = utils.combine_isd_latest(df_isd, df_latest)
+df = utils.combine_ghcnh_latest(df_ghcnh, df_latest)
 
 summary = utils.get_latest_summary(df)
 summary.temp = summary.temp.round(1)

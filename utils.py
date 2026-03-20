@@ -77,14 +77,19 @@ def get_GHCN_ID(ICAO):
     GHCN_ID = stations[stations.ICAO == ICAO].iloc[0].GHCN_ID
     return(GHCN_ID)
 
+def get_ICAO(GHCN_ID):
+    stations = get_stations()
+    ICAO = stations[stations.GHCN_ID == GHCN_ID].iloc[0].ICAO
+    return(ICAO)
+
 def get_latest(ICAO, start_time, end_time=None):
     nws_request_url = 'https://api.weather.gov/stations/{}/observations'.format(
         ICAO
     )
 
-    params = {'start': start_time.floor("S").isoformat().replace('+00:00', 'Z')}
+    params = {'start': start_time.floor("s").isoformat().replace('+00:00', 'Z')}
     if end_time is not None:
-        params['end'] = end_time.ceil("S").isoformat().replace('+00:00', 'Z')
+        params['end'] = end_time.ceil("s").isoformat().replace('+00:00', 'Z')
 
     response_json = requests.get(nws_request_url, params=params).json()
 
@@ -103,17 +108,17 @@ def get_latest(ICAO, start_time, end_time=None):
 
     return observations
 
-def combine_isd_latest(df_isd, df_latest):
+def combine_ghcnh_latest(df_ghcnh, df_latest):
     df = pd.concat((
-        df_isd.reset_index(), 
+        df_ghcnh.reset_index(), 
         df_latest.to_frame('temp').reset_index().rename(
             columns={"index":"timestamp"})))
 
-    df = df.groupby('timestamp').first() # in case ISD and NOAA have an overlap
+    df = df.groupby('timestamp').first() # in case GHCNh and NOAA have an overlap
     return df
 
 def get_latest_summary(df):
-    summary = (get_isd_summary(df)
+    summary = (get_ghcnh_summary(df)
 			   # drop the obs from here so that our obs is not interpolated/rounded
                .drop("obs", axis=1) 
                .stack())
