@@ -4,40 +4,44 @@ import pathlib
 import gzip
 import requests
 
-def read_isd_helper(basedir, station_id):
-    colspecs = [(15,27), (27,28), (87,92), (92,93)]
-    colnames = ['timestamp', 'source', 'temp', 'temp_quality']
-
-    path = pathlib.Path(basedir)
-    gz_files = list(path.glob("*/" + station_id + "*"))
-
-    if len(gz_files) > 0:
-        df = pd.concat([pd.read_fwf(gzip.open(gz_file, 'rt', errors='ignore'),
-                 colspecs=colspecs, names=colnames, dtype=str)
-                 for gz_file in gz_files])
-
-        df['timestamp'] = pd.to_datetime(df.timestamp, format="%Y%m%d%H%M", utc=True)
-        df = df[df.temp != '+9999']
-        df['temp'] = df.temp.astype(int)/10
-    else:
-        df = pd.DataFrame()
-
-    return df
-
-def read_isd(basedir, station_id, station_id2=None):
-    df = read_isd_helper(basedir, station_id)
-
-    if station_id2 is not None:
-        df2 = read_isd_helper(basedir, station_id2)
-        df = pd.concat((df, df2))
-
-    df = df.groupby('timestamp').first()
+def read_ghcnh_por_psv(basedir, GHCN_ID):
+    columns = ['DATE', 'temperature']
     
-    return(df)
+    path = pathlib.Path(basedir)
+    df = pd.read_csv(basedir + "/" + GHCN_ID + ".psv",
+                    sep="|", usecols=columns, dtype=str)
 
-def get_isd_summary(df):
-    hours = pd.date_range(start=df.index.floor('H').min(), 
-                  end=df.index.ceil('H').max(), freq="H")
+    df['timestamp'] = pd.to_datetime(df.DATE, utc=True)
+    df['temp'] = df['temperature'].astype(float)
+
+    return df[['timestamp', 'temp']].groupby('timestamp').first()
+
+def read_ghcnh_parquet(basedir, GHCN_ID):
+    columns = ['DATE', 'temperature']
+    
+    path = pathlib.Path(basedir)
+    parquet_files = list(path.glob("GHCNh_" + GHCN_ID + "_*.parquet"))
+
+    if len(parquet_files) > 0:
+        dfs = []
+        for parquet_file in parquet_files:
+            try:
+                dfs.append(pd.read_parquet(parquet_file, columns=columns))
+                dfs.append(pd.DataFrame(columns=columns))
+            except Exception as e:
+                raise ValueError(f"Error: failed to parse {parquet_file}: {e}")
+        df = pd.concat(dfs, ignore_index=True)
+
+        df['timestamp'] = pd.to_datetime(df.DATE, utc=True)
+        df['temp'] = df['temperature'].astype(float)
+
+        return df[['timestamp', 'temp']].groupby('timestamp').first()
+    else:
+        raise ValueError("No parquet files found for this station")
+
+def get_ghcnh_summary(df):
+    hours = pd.date_range(start=df.index.min().floor('h'), 
+                          end=df.index.max().ceil('h'), freq="h")
     df2 = df.reindex(df.index.union(hours))
     df2 = df2['temp'].interpolate(limit=1).loc[hours]
 
@@ -56,8 +60,8 @@ def get_isd_summary(df):
     
     return(summary)
 
-def write_isd_summary(summary, outdir):
-    summary = (summary.round(1)*10).astype(str).replace("(\.0$|nan)", "", regex=True)
+def write_ghcnh_summary(summary, outdir):
+    summary = (summary.round(1)*10).astype(str).replace("(\\.0$|nan)", "", regex=True)
 
     summary['hour'] = summary.index.hour
     summary['year'] = summary.index.year
@@ -68,10 +72,10 @@ def write_isd_summary(summary, outdir):
     for group_name, df_group in summary_grouped:
         df_group.to_csv(outdir + "/" + group_name + ".csv", index=False)
 
-def get_ICAO(station_id):
+def get_GHCN_ID(ICAO):
     stations = get_stations()
-    ICAO = stations[(stations.USAF + "-" + stations.WBAN) == station_id].ICAO.iloc[0]
-    return(ICAO)
+    GHCN_ID = stations[stations.ICAO == ICAO].iloc[0].GHCN_ID
+    return(GHCN_ID)
 
 def get_latest(ICAO, start_time, end_time=None):
     nws_request_url = 'https://api.weather.gov/stations/{}/observations'.format(
@@ -125,14 +129,6 @@ def get_latest_summary(df):
     latest = pd.concat((latest, latest_obs))
 
     return latest
-
-def get_old_station_id(station_id):
-    stations = get_stations()
-    row = stations[(stations.USAF.astype(str) + "-" + stations.WBAN.astype(str)) == station_id].iloc[0]
-    if pd.isnull(row.USAF2):
-        return None
-    else:
-        return row.USAF2 + "-" + row.WBAN2
 
 def get_stations():
     return pd.read_csv("csv/stations.csv", dtype=str)
