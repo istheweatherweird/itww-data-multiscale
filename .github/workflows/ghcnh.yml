@@ -1,10 +1,9 @@
-name: itww
+name: ghcnh
 
 on:
   workflow_dispatch: 
   schedule:
     - cron: '16 15 * * *'
-    - cron: '16 0-14,16-23 * * *'
 
 jobs:
     build: 
@@ -24,7 +23,6 @@ jobs:
           - name: Install aria2
             run: sudo apt-get install -y aria2
           - name: Build GHCNh database
-            if: github.event.schedule != '16 0-14,16-23 * * *'
             run: ./ghcnh.sh
           - name: Update latest
             run: ./latest.sh
