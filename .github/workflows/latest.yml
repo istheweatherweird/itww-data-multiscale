@@ -1,4 +1,4 @@
-name: itww
+name: latest
 
 on:
   workflow_dispatch: 
