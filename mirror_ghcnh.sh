@@ -7,14 +7,17 @@
 # GHCNh_IDs: the stations to download data for
 
 # download the ghcnh inventory to know which years exist for which stations
-aria2c --conditional-get --continue --dir=$1 "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-inventory.txt"
+# base URL for GHCNh data
+BASEURL="https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly"
+
+aria2c --conditional-get --continue --dir="$1" "${BASEURL}/doc/ghcnh-inventory.txt"
 
 # if ITWW_LATEST is set, only download the latest 2 years of data for each station
 if [[ "$ITWW_LATEST" == 1 ]]; then
    for station in "${@:2}"; do    
       grep "^$station" $1/ghcnh-inventory.txt | tail -2
    done |\
-      awk '{print "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/" $2 "/parquet/GHCNh_" $1 "_" $2 ".parquet"}' |\
+      awk -v BASEURL="$BASEURL" '{print BASEURL "/access/by-year/" $2 "/parquet/GHCNh_" $1 "_" $2 ".parquet"}' |\
       aria2c --conditional-get --continue --dir=$1 --input-file=-
 
 # otherwise, download all years of data for each station
@@ -24,6 +27,6 @@ else
 
    cat $1/ghcnh-inventory.txt |\
       grep $REGEX |\
-      awk '{print "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/" $2 "/parquet/GHCNh_" $1 "_" $2 ".parquet"}' |\
+      awk -v BASEURL="$BASEURL" '{print BASEURL "/access/by-year/" $2 "/parquet/GHCNh_" $1 "_" $2 ".parquet"}' |\
       aria2c --conditional-get --continue --dir=$1 --input-file=-
 fi
