@@ -14,6 +14,7 @@ df_latest = utils.get_latest(ICAO, last_ghcnh_timestamp - pd.Timedelta(1, "h"))
 print(df_latest)
 
 df = utils.combine_ghcnh_latest(df_ghcnh, df_latest)
+print(df)
 
 summary = utils.get_latest_summary(df)
 summary.temp = summary.temp.round(1)
