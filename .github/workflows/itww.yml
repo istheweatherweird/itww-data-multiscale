@@ -1,4 +1,4 @@
-name: isd-test
+name: itww
 
 on:
   workflow_dispatch: 
@@ -21,11 +21,11 @@ jobs:
                 pip install -r requirements.txt
           - name: build stations.csv
             run: python stations_out.py config/stations_in.csv csv/airports.dat > csv/stations.csv
-          - name: Install lftp
-            run: sudo apt-get install -y lftp
-          - name: Build isd database
+          - name: Install aria2
+            run: sudo apt-get install -y aria2
+          - name: Build GHCNh database
             if: github.event.schedule != '16 0-14,16-23 * * *'
-            run: ./isd.sh
+            run: ./ghcnh.sh
           - name: Update latest
             run: ./latest.sh
           - uses: stefanzweifel/git-auto-commit-action@v5
