@@ -39,6 +39,11 @@ def read_ghcnh_parquet(basedir, GHCN_ID):
     else:
         raise ValueError("No parquet files found for this station")
 
+# Summary algorithm works as follows:
+# 1. Create a complete hourly time index covering the range of the data
+# 2. Interpolate the temperature data to to hourly (original data can be any minute of any hour)
+#    (limit=1 so don't interpolate more than 1 hour gap)
+# 3. For each timescale (1, 7, 30, 365 days), compute a rolling mean and require at least 95% of hours to not be missing
 def get_ghcnh_summary(df):
     hours = pd.date_range(start=df.index.min().floor('h'), 
                           end=df.index.max().ceil('h'), freq="h")
