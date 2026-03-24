@@ -3,6 +3,7 @@ import numpy as np
 import pathlib
 import gzip
 import requests
+import math
 
 def read_ghcnh_por_psv(basedir, GHCN_ID):
     columns = ['DATE', 'temperature']
@@ -87,28 +88,22 @@ def get_ICAO(GHCN_ID):
     ICAO = stations[stations.GHCN_ID == GHCN_ID].iloc[0].ICAO
     return(ICAO)
 
-def get_latest(ICAO, start_time, end_time=None):
-    nws_request_url = 'https://api.weather.gov/stations/{}/observations'.format(
-        ICAO
-    )
+def get_latest(ICAO, start_time):
+    metar_request_url = f'https://aviationweather.gov/api/data/metar'
 
-    params = {'start': start_time.floor("s").isoformat().replace('+00:00', 'Z')}
-    if end_time is not None:
-        params['end'] = end_time.ceil("s").isoformat().replace('+00:00', 'Z')
+    params = {'ids': ICAO, 'format': 'json'}
+    hours = max(1, (pd.Timestamp.now(tz='UTC') - start_time)/ pd.Timedelta(1, "h"))
+    params['hours'] = math.ceil(hours)
 
-    response_json = requests.get(nws_request_url, params=params).json()
+    response_json = requests.get(metar_request_url, params=params).json()
 
     try:
-        timestamps = [obs['properties']['timestamp']
-                      for obs in response_json['features']
-                      if obs['properties']['temperature']['value']
-                      ]
-        temps = [obs['properties']['temperature']['value']
-                 for obs in response_json['features']
-                 if obs['properties']['temperature']['value']
-                 ]
-        observations = pd.Series(temps, index=pd.DatetimeIndex(timestamps))
+        temps = {pd.Timestamp(obs['obsTime'], unit='s', tz='UTC'): obs['temp']
+                      for obs in response_json 
+                      if 'temp' in obs and 'obsTime' in obs}
+        observations = pd.Series(temps)
     except KeyError:
+        print("Warning: no valid observations found in METAR")
         observations = pd.Series()
 
     return observations
